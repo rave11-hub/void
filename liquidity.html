@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Add Liquidity — VOID on Base</title>
-<meta name="description" content="Add VOID/ETH liquidity on Base with your own wallet.">
+<title>Add Liquidity (Uniswap V4) — VOID on Base</title>
+<meta name="description" content="Add VOID/ETH liquidity on Uniswap V4 (Base) with your own wallet.">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,7 +62,7 @@
 
 <main>
   <h1>Add liquidity</h1>
-  <p class="lead">Pair VOID with ETH in the Uniswap V2 pool on Base. You receive LP tokens that represent your share of the pool.</p>
+  <p class="lead">Pair VOID with ETH in the Uniswap V4 pool on Base. Your share is held as a position NFT (full range, 0.3% fee tier).</p>
 
   <div class="card" id="bal" hidden style="margin-bottom:14px;">
     <div class="row"><span>Your <span id="symA">VOID</span> on Base</span><a id="tokLink" class="net" target="_blank" rel="noopener noreferrer"></a></div>
@@ -88,6 +88,7 @@
 
     <div class="info">
       <div><span>Pool</span><b id="pool">–</b></div>
+      <div><span>Fee tier</span><b>0.3% · full range</b></div>
       <div><span>Price</span><b id="price">–</b></div>
     </div>
 
@@ -95,25 +96,42 @@
     <div id="status" role="status" aria-live="polite"></div>
   </div>
 
-  <p class="note">Liquidity providers can lose value compared with just holding (impermanent loss). If no pool exists yet, the first amounts you add set the starting price. VOID is a meme coin for community fun, not financial advice. Check every transaction in your wallet before you confirm.</p>
+  <p class="note">Uniswap V4 uses native ETH and Permit2, so the first time you may sign up to 3 transactions (approve, permit, add). Liquidity providers can lose value compared with just holding (impermanent loss). If no pool exists yet, the first amounts you add set the starting price. VOID is a meme coin for community fun, not financial advice. Check every transaction in your wallet before you confirm.</p>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha3/0.9.3/sha3.min.js"></script>
 <script>
 (function(){
   var CFG = {
     TOKEN:  '0x00', // ← UPDATE the VOID contract address on Base here (the only place to change)
-    ROUTER: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24', // Uniswap V2 Router02, Base
-    FACTORY:'0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6', // Uniswap V2 Factory, Base
-    WETH:   '0x4200000000000000000000000000000000000006',
-    CHAIN:  '0x2105',
+    POSM:   '0x7c5f5a4bbd8fd63184577525326123b519429bdc', // Uniswap v4 PositionManager, Base
+    STATEVIEW:'0xa3c0c9b65bad0b08107aa264b0f3db444b867a71', // Uniswap v4 StateView, Base
+    PERMIT2:'0x000000000022D473030F116dDEE9F6B43aC78BA3',
+    FEE:3000, TS:60, // pool fee (0.3%) and tick spacing; must match the pool, no hooks
+    CHAIN:'0x2105',
     EXPLORER:'https://basescan.org'
   };
+  var Q96 = 2n**96n, Q192 = 2n**192n;
   var $ = function(id){return document.getElementById(id);};
-  var st = {acct:null, dec:18, balT:0n, balE:0n, allow:0n, rT:0n, rE:0n, pool:false, slip:100, busy:false, bad:false, sym:'VOID'};
+  var st = {acct:null, dec:18, balT:0n, balE:0n, allow:0n, p2a:0n, p2e:0, sqrt:0n, pool:false, slip:100, busy:false, bad:false, sym:'VOID'};
   var eth = window.ethereum;
 
   var pad = function(h){return String(h).replace(/^0x/,'').toLowerCase().padStart(64,'0');};
   var hex = function(b){return '0x'+b.toString(16);};
+  var w = function(n){return pad(hex(BigInt(n)));};
+  var tk = function(n){return pad(hex(BigInt.asUintN(256,BigInt(n))));};
+  var u8 = function(h){var a=[];for(var i=0;i<h.length;i+=2)a.push(parseInt(h.substr(i,2),16));return a;};
+  var K = function(x){return (window.keccak_256||window.keccak256)(x);};
+  var sel = function(s){return '0x'+K(s).slice(0,8);};
+  function keyWords(){return pad('0')+pad(CFG.TOKEN)+w(CFG.FEE)+w(CFG.TS)+pad('0');} // PoolKey: ETH(native)=currency0, VOID=currency1
+  function poolId(){return '0x'+K(u8(keyWords()));}
+  function encBytes(h){var n=h.length/2, p=Math.ceil(n/32)*64; return w(n)+h.padEnd(p,'0');}
+  function encArr(items){
+    var enc=items.map(encBytes), o=items.length*32, offs=[];
+    enc.forEach(function(e){offs.push(o); o+=e.length/2;});
+    return w(items.length)+offs.map(w).join('')+enc.join('');
+  }
+  function isqrt(n){ if(n<2n) return n; var x=n, y=(x+1n)/2n; while(y<x){x=y; y=(x+n/x)/2n;} return x; }
   function parse(v,d){
     v=(v||'').trim(); if(!/^\d*\.?\d*$/.test(v)||v===''||v==='.') return 0n;
     var p=v.split('.'), f=(p[1]||'').slice(0,d).padEnd(d,'0');
@@ -126,6 +144,7 @@
   function msg(t,c,html){var e=$('status'); e.className=c||''; if(html) e.innerHTML=t; else e.textContent=t;}
   function ethCall(to,data){return eth.request({method:'eth_call',params:[{to:to,data:data},'latest']});}
   var short = function(a){return a.slice(0,6)+'…'+a.slice(-4);};
+  var now = function(){return Math.floor(Date.now()/1000);};
 
   async function ensureBase(){
     var id = await eth.request({method:'eth_chainId'});
@@ -154,6 +173,7 @@
     if(id!==CFG.CHAIN){ st.wrong=true; render(); return; }
     st.wrong=false;
     if(!/^0x[0-9a-fA-F]{40}$/.test(CFG.TOKEN)){ st.bad=true; msg('The VOID contract address is not set yet.','bad'); render(); return; }
+    if(!(window.keccak_256||window.keccak256)){ st.bad=true; msg('Hash library failed to load. Reload the page.','bad'); render(); return; }
     try{
       var code = await eth.request({method:'eth_getCode',params:[CFG.TOKEN,'latest']});
       if(code==='0x'){ st.bad=true; msg('No token contract found at this address on Base. Check the VOID address.','bad'); render(); return; }
@@ -166,23 +186,25 @@
       var r = await Promise.all([
         eth.request({method:'eth_getBalance',params:[st.acct,'latest']}),
         ethCall(CFG.TOKEN,'0x70a08231'+pad(st.acct)),
-        ethCall(CFG.TOKEN,'0xdd62ed3e'+pad(st.acct)+pad(CFG.ROUTER)),
-        ethCall(CFG.FACTORY,'0xe6a43905'+pad(CFG.TOKEN)+pad(CFG.WETH))
+        ethCall(CFG.TOKEN,'0xdd62ed3e'+pad(st.acct)+pad(CFG.PERMIT2)),
+        ethCall(CFG.PERMIT2,sel('allowance(address,address,address)')+pad(st.acct)+pad(CFG.TOKEN)+pad(CFG.POSM)),
+        ethCall(CFG.STATEVIEW,sel('getSlot0(bytes32)')+pad(poolId()))
       ]);
       st.balE=BigInt(r[0]); st.balT=BigInt(r[1]); st.allow=BigInt(r[2]);
-      var pair='0x'+r[3].slice(-40);
-      st.pool = !/^0x0+$/.test(pair);
-      st.rT=0n; st.rE=0n;
-      if(st.pool){
-        var g = (await ethCall(pair,'0x0902f1ac')).slice(2);
-        var r0=BigInt('0x'+g.slice(0,64)), r1=BigInt('0x'+g.slice(64,128));
-        var tokenIs0 = BigInt(CFG.TOKEN) < BigInt(CFG.WETH);
-        st.rT = tokenIs0?r0:r1; st.rE = tokenIs0?r1:r0;
-        if(st.rT===0n||st.rE===0n) st.pool=false;
-      }
+      var p2=r[3].slice(2); st.p2a=BigInt('0x'+p2.slice(0,64)); st.p2e=Number(BigInt('0x'+p2.slice(64,128)));
+      st.sqrt = BigInt('0x'+r[4].slice(2,66));
+      st.pool = st.sqrt>0n;
     }catch(e){ msg('Could not read data from Base. Try again in a moment.','bad'); }
     render();
   }
+
+  function step(t){
+    if(st.allow<t) return 'approve';
+    if(st.p2a<t || st.p2e<=now()+600) return 'permit';
+    if(!st.pool) return 'init';
+    return 'mint';
+  }
+  var LABEL={approve:'Approve VOID',permit:'Permit VOID (Permit2)',init:'Create pool & set price',mint:'Add liquidity'};
 
   function render(){
     var go=$('go'), c=$('conn');
@@ -196,8 +218,8 @@
     }
     $('balT').textContent = st.acct ? fmt(st.balT,st.dec,4) : '–';
     $('balE').textContent = st.acct ? fmt(st.balE,18,5) : '–';
-    $('pool').textContent = st.pool ? 'VOID/ETH exists' : (st.acct && !st.wrong ? 'New pool' : '–');
-    $('price').textContent = st.pool ? '1 ETH = '+fmt(st.rT*10n**18n/st.rE,st.dec,2)+' VOID' : (st.acct && !st.wrong ? 'You set it' : '–');
+    $('pool').textContent = st.pool ? 'VOID/ETH exists (V4)' : (st.acct && !st.wrong ? 'New pool' : '–');
+    $('price').textContent = st.pool ? '1 ETH = '+fmt(10n**18n*st.sqrt*st.sqrt/Q192,st.dec,2)+' VOID' : (st.acct && !st.wrong ? 'You set it' : '–');
     var t=parse($('amtT').value,st.dec), e=parse($('amtE').value,18);
     if(!st.acct){ go.textContent='Connect wallet'; go.disabled=false; return; }
     if(st.wrong){ go.textContent='Switch to Base'; go.disabled=false; return; }
@@ -205,14 +227,15 @@
     if(t===0n||e===0n){ go.textContent='Enter amounts'; go.disabled=true; return; }
     if(t>st.balT){ go.textContent='Not enough VOID'; go.disabled=true; return; }
     if(e>st.balE){ go.textContent='Not enough ETH'; go.disabled=true; return; }
-    go.textContent = st.allow<t ? 'Approve VOID' : 'Add liquidity';
+    go.textContent = LABEL[step(t)];
     go.disabled = st.busy;
   }
 
   function link(from){
     if(!st.pool) return;
-    if(from==='t'){ var t=parse($('amtT').value,st.dec); $('amtE').value = t? fmt(t*st.rE/st.rT,18,18):''; }
-    else { var e=parse($('amtE').value,18); $('amtT').value = e? fmt(e*st.rT/st.rE,st.dec,st.dec):''; }
+    var s2=st.sqrt*st.sqrt;
+    if(from==='t'){ var t=parse($('amtT').value,st.dec); $('amtE').value = t? fmt(t*Q192/s2,18,18):''; }
+    else { var e=parse($('amtE').value,18); $('amtT').value = e? fmt(e*s2/Q192,st.dec,st.dec):''; }
   }
 
   async function send(tx){
@@ -226,22 +249,42 @@
     return {hash:h, ok:null};
   }
 
+  function mintData(t,e){
+    var mx=Math.floor(887272/CFG.TS)*CFG.TS;
+    var sp=Number(st.sqrt)/Math.pow(2,96), sa=Math.pow(1.0001,-mx/2), sb=Math.pow(1.0001,mx/2);
+    var L=BigInt(Math.floor(Math.min(Number(e)*sp*sb/(sb-sp), Number(t)/(sp-sa))*0.999));
+    if(L<=0n) throw new Error('Amounts too small');
+    var k=BigInt(10000+st.slip), emax=e*k/10000n, tmax=t*k/10000n;
+    var mint=keyWords()+tk(-mx)+tk(mx)+w(L)+w(emax)+w(tmax)+pad(st.acct)+w(384)+w(0);
+    var settle=pad('0')+pad(CFG.TOKEN), sweep=pad('0')+pad(st.acct);
+    var actions='020d14'; // MINT_POSITION, SETTLE_PAIR, SWEEP (refund unused ETH)
+    var ea=encBytes(actions);
+    var unlock=w(64)+w(64+ea.length/2)+ea+encArr([mint,settle,sweep]);
+    return sel('modifyLiquidities(bytes,uint256)')+w(64)+w(now()+1200)+encBytes(unlock);
+  }
+
   async function act(){
     if(!st.acct) return connect();
     if(st.wrong){ try{ await ensureBase(); await refresh(); }catch(e){ msg('Please switch to Base in your wallet.','bad'); } return; }
-    var t=parse($('amtT').value,st.dec), e=parse($('amtE').value,18);
+    var t=parse($('amtT').value,st.dec), e=parse($('amtE').value,18), s=step(t);
     st.busy=true; render();
     try{
-      if(st.allow<t){
-        var r = await send({from:st.acct,to:CFG.TOKEN,data:'0x095ea7b3'+pad(CFG.ROUTER)+pad(hex(t))});
-        if(r.ok){ msg('VOID approved for this amount. Now add the liquidity.','ok'); } else { msg(r.ok===null?'Still pending. Check Basescan, then refresh.':'Approval failed.','bad'); }
+      var tx, done;
+      if(s==='approve'){
+        tx={from:st.acct,to:CFG.TOKEN,data:'0x095ea7b3'+pad(CFG.PERMIT2)+w(t)}; done='VOID approved. Next: permit.';
+      } else if(s==='permit'){
+        tx={from:st.acct,to:CFG.PERMIT2,data:sel('approve(address,address,uint160,uint48)')+pad(CFG.TOKEN)+pad(CFG.POSM)+w(t)+w(now()+86400)}; done='Permit set. Next: continue.';
+      } else if(s==='init'){
+        var sq=isqrt(t*Q192/e); // price = VOID per ETH (currency1/currency0)
+        tx={from:st.acct,to:CFG.POSM,data:sel('initializePool((address,address,uint24,int24,address),uint160)')+keyWords()+w(sq)}; done='Pool created. Now add the liquidity.';
       } else {
-        var k=BigInt(10000-st.slip), dl=BigInt(Math.floor(Date.now()/1000)+1200);
-        var data='0xf305d719'+pad(CFG.TOKEN)+pad(hex(t))+pad(hex(t*k/10000n))+pad(hex(e*k/10000n))+pad(st.acct)+pad(hex(dl));
-        var r2 = await send({from:st.acct,to:CFG.ROUTER,data:data,value:hex(e)});
-        if(r2.ok){ msg('Liquidity added. <a href="'+CFG.EXPLORER+'/tx/'+r2.hash+'" target="_blank" rel="noopener noreferrer">View transaction</a>','ok',true); $('amtT').value=''; $('amtE').value=''; }
-        else msg(r2.ok===null?'Still pending. Check Basescan, then refresh.':'Transaction failed. Try a higher slippage or refresh the amounts.','bad');
+        tx={from:st.acct,to:CFG.POSM,data:mintData(t,e),value:hex(e)}; done=null;
       }
+      var r = await send(tx);
+      if(r.ok){
+        if(done) msg(done,'ok');
+        else { msg('Liquidity added. <a href="'+CFG.EXPLORER+'/tx/'+r.hash+'" target="_blank" rel="noopener noreferrer">View transaction</a>','ok',true); $('amtT').value=''; $('amtE').value=''; }
+      } else msg(r.ok===null?'Still pending. Check Basescan, then refresh.':'Transaction failed. Try a higher slippage or refresh the amounts.','bad');
     }catch(err){ msg(err && err.code===4001 ? 'You rejected the request in your wallet.' : 'Error: '+((err&&err.message)||err),'bad'); }
     st.busy=false; await refresh();
   }
