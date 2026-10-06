@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VOID — Everything Falls In</title>
+<meta name="description" content="VOID is the black hole of crypto: a meme coin built for community fun. Not financial advice.">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VOID — Everything Falls In">
+<meta property="og:description" content="The black hole of crypto. Every bit of attention pulled in, never to escape again.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="VOID — Everything Falls In">
+<meta name="twitter:description" content="The black hole of crypto. Meme coin for community fun, not financial advice.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23ff6a2c' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%23000'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#000000;
+    --panel:#0b0a0d;
+    --panel-2:#131117;
+    --ember:#ff6a2c;
+    --ember-dim:#7a3315;
+    --ash:#3a3440;
+    --text:#efe9e2;
+    --text-dim:#a89e97;
+    --line:#242028;
+    --faint:#8a8189;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px); scroll-behavior:smooth;}
+  html,body{margin:0;background:var(--black);color:var(--text);}
+  body{
+    font-family:'Work Sans',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; top:env(safe-area-inset-top,0px);
+    z-index:10; display:flex; align-items:center; justify-content:space-between;
+    padding:20px 24px; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{font-family:'Unbounded',sans-serif; font-weight:700; font-size:18px; letter-spacing:0.02em;}
+  .brand span{color:var(--ember);}
+  .navlinks{display:flex; gap:28px;}
+  .navlinks a{color:var(--text-dim); text-decoration:none; font-size:14px;}
+  .navlinks a:hover{color:var(--text);}
+  .navlinks a:focus-visible, a:focus-visible, button:focus-visible{outline:2px solid var(--ember); outline-offset:3px;}
+  @media (max-width:640px){.navlinks{display:none;}}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative; min-height:92vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    padding:60px 24px 40px; overflow:hidden;
+  }
+  .stars{position:absolute; inset:0; z-index:0;}
+  .hole{width:min(420px,72vw); height:min(420px,72vw); margin:0 auto 8px; position:relative; z-index:1;}
+  .hole svg{width:100%; height:100%; display:block;}
+  .ring{fill:none; stroke-linecap:round; animation:flow 16s linear infinite;}
+  .r1{stroke-dasharray:30 6 18 10 22 14; animation-duration:18s;}
+  .r2{stroke-dasharray:14 8 34 6 20 18; animation-duration:12s; animation-direction:reverse;}
+  .r3{stroke-dasharray:24 12 10 10 28 16; animation-duration:8s;}
+  @keyframes flow{to{stroke-dashoffset:-100;}}
+  .pulse{animation:pulse 6s ease-in-out infinite; transform-origin:210px 210px;}
+  @keyframes pulse{50%{opacity:0.7; transform:scale(1.04);}}
+  .tw circle{animation:twinkle 4s ease-in-out infinite;}
+  .tw circle:nth-child(odd){animation-duration:5.5s; animation-delay:-1.5s;}
+  .tw circle:nth-child(3n){animation-delay:-3s;}
+  @keyframes twinkle{50%{opacity:0.12;}}
+
+  h1.title{
+    font-family:'Unbounded',sans-serif; font-weight:900;
+    font-size:clamp(56px,14vw,120px); line-height:0.9; margin:8px 0 4px;
+    letter-spacing:-0.02em; color:var(--text); position:relative; z-index:1;
+  }
+  .tagline{
+    font-size:clamp(15px,3vw,19px); color:var(--text-dim); max-width:480px;
+    margin:14px auto 28px; line-height:1.5; position:relative; z-index:1;
+  }
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; position:relative; z-index:1;}
+  .btn{
+    font-family:'Work Sans',sans-serif; font-weight:600; font-size:15px;
+    padding:13px 26px; border-radius:2px; text-decoration:none; border:1px solid transparent;
+    transition:transform 0.15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn-fill{background:var(--ember); color:#140800;}
+  .btn-outline{border-color:var(--ash); color:var(--text);}
+
+  .ca{
+    margin-top:22px; font-size:12px; color:var(--text-dim); font-family:monospace;
+    background:var(--panel-2); border:1px solid var(--line); padding:8px 14px; border-radius:2px;
+    position:relative; z-index:1; word-break:break-all; max-width:90vw;
+    cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  .ca:hover{border-color:var(--ember); color:var(--text);}
+
+  /* ---------- SECTION SHARED ---------- */
+  section{padding:80px 0; border-top:1px solid var(--line);}
+  .kicker{font-size:13px; color:var(--ember); margin:0 0 10px; font-weight:600;}
+  h2{
+    font-family:'Unbounded',sans-serif; font-weight:700; font-size:clamp(28px,5vw,40px);
+    line-height:1.1; margin:0 0 20px; max-width:600px;
+  }
+  p.lead{color:var(--text-dim); font-size:17px; line-height:1.65; max-width:600px; margin:0 0 12px;}
+
+  /* ---------- ABOUT ---------- */
+  .about-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;}
+  @media (max-width:760px){.about-grid{grid-template-columns:1fr;}}
+  .mini-hole{width:100%; max-width:280px;}
+
+  /* ---------- STATS ---------- */
+  .stats-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media (max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat{background:var(--black); padding:28px 20px;}
+  .stat .num{font-family:'Unbounded',sans-serif; font-size:clamp(22px,4vw,30px); font-weight:700; color:var(--ember);}
+  .stat .lbl{font-size:13px; color:var(--text-dim); margin-top:6px;}
+
+  /* ---------- STEPS ---------- */
+  .steps{display:flex; flex-direction:column; gap:0; max-width:600px;}
+  .step{display:flex; gap:20px; padding:22px 0; border-top:1px solid var(--line);}
+  .step:first-child{border-top:none;}
+  .step .n{font-family:'Unbounded',sans-serif; color:var(--ember); font-weight:700; font-size:20px; min-width:28px;}
+  .step h3{margin:0 0 6px; font-size:17px; font-weight:600;}
+  .step p{margin:0; color:var(--text-dim); font-size:15px; line-height:1.5;}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:48px 0 calc(48px + env(safe-area-inset-bottom,0px)); border-top:1px solid var(--line); text-align:center;}
+  footer .brand{justify-content:center; display:flex; margin-bottom:10px;}
+  .disclaimer{font-size:12px; color:var(--faint); max-width:520px; margin:20px auto 0; line-height:1.6;}
+  [hidden]{display:none !important;}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
+  .ca-tag{font-family:'Work Sans',sans-serif; font-weight:600; font-size:11px; color:#140800; background:var(--ember); padding:2px 6px; border-radius:2px;}
+  .ca svg{flex:none; width:14px; height:14px;}
+  .verify{margin:16px 0 0; font-size:14px; display:flex; gap:20px; flex-wrap:wrap;}
+  .verify a, .links a{color:var(--text); text-decoration:underline; text-decoration-color:var(--ember); text-underline-offset:4px;}
+  .verify a:hover, .links a:hover{color:var(--ember);}
+  .links{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:18px 0 0;}
+  .links a{text-decoration:none; border:1px solid var(--ash); padding:10px 20px; border-radius:2px; font-weight:600; font-size:14px; transition:border-color 0.15s ease;}
+  .links a:hover{border-color:var(--ember);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">VOID<span>.</span></div>
+  <div class="navlinks">
+    <a href="#about">What is VOID</a>
+    <a href="#stats">Stats</a>
+    <a href="#buy">How to Buy</a>
+    <a href="liquidity.html">Add Liquidity</a>
+    <a href="#community">Community</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <svg class="stars" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="vign" cx="50%" cy="45%" r="70%">
+        <stop offset="0%" stop-color="#000000"/>
+        <stop offset="100%" stop-color="#000000"/>
+      </radialGradient>
+    </defs>
+    <rect width="800" height="800" fill="url(#vign)"/>
+    <g fill="#efe9e2" class="tw">
+      <circle cx="60" cy="90" r="1.4" opacity="0.6"/>
+      <circle cx="140" cy="220" r="1" opacity="0.4"/>
+      <circle cx="700" cy="120" r="1.6" opacity="0.7"/>
+      <circle cx="760" cy="300" r="1" opacity="0.5"/>
+      <circle cx="90" cy="500" r="1.2" opacity="0.5"/>
+      <circle cx="40" cy="650" r="1.6" opacity="0.6"/>
+      <circle cx="730" cy="600" r="1.3" opacity="0.5"/>
+      <circle cx="650" cy="720" r="1" opacity="0.4"/>
+      <circle cx="400" cy="40" r="1" opacity="0.5"/>
+      <circle cx="200" cy="750" r="1.3" opacity="0.5"/>
+      <circle cx="500" cy="760" r="1" opacity="0.4"/>
+      <circle cx="620" cy="60" r="1.1" opacity="0.5"/>
+    </g>
+  </svg>
+
+  <div class="hole" role="img" aria-label="Illustration of a black hole with a glowing orange ring surrounding a pitch-black core">
+    <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff8c42" stop-opacity="0.9"/>
+          <stop offset="35%" stop-color="#ff6a2c" stop-opacity="0.35"/>
+          <stop offset="70%" stop-color="#ff6a2c" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="ring1" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffb066"/>
+          <stop offset="50%" stop-color="#ff6a2c"/>
+          <stop offset="100%" stop-color="#7a3315"/>
+        </linearGradient>
+        <linearGradient id="ring2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#7a3315"/>
+          <stop offset="50%" stop-color="#ff6a2c"/>
+          <stop offset="100%" stop-color="#ffd9a8"/>
+        </linearGradient>
+      </defs>
+      <circle class="pulse" cx="210" cy="210" r="200" fill="url(#glow)"/>
+      <g class="disk">
+        <ellipse class="ring r1" pathLength="100" cx="210" cy="210" rx="195" ry="58" stroke="url(#ring1)" stroke-width="5" opacity="0.85"/>
+        <ellipse class="ring r2" pathLength="100" cx="210" cy="210" rx="160" ry="46" stroke="url(#ring2)" stroke-width="4" opacity="0.75"/>
+        <ellipse class="ring r3" pathLength="100" cx="210" cy="210" rx="125" ry="34" stroke="#ffb066" stroke-width="3" opacity="0.65"/>
+      </g>
+      <circle cx="210" cy="210" r="80" fill="#000000"/>
+      <circle cx="210" cy="210" r="80" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <h1 class="title">VOID</h1>
+  <p class="tagline">Not just another coin. It's the black hole of crypto — every bit of attention, hype, and liquidity pulled in, never to escape again.</p>
+  <div class="cta-row">
+    <a class="btn btn-fill" href="liquidity.html">Enter VOID</a>
+    <a class="btn btn-outline" href="#about">Learn First</a>
+    <a class="btn btn-outline" data-link="dex" hidden>Buy on DEX</a>
+    <a class="btn btn-outline" data-link="chart" hidden>View chart</a>
+  </div>
+  <button class="ca" id="caCopy" type="button" aria-label="Copy contract address">
+    <span class="ca-tag">CA</span>
+    <span id="caText">Soon</span>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="5" width="8" height="8" rx="1"/><path d="M3 11V3h8"/></svg>
+  </button>
+  <span class="sr" id="caLive" role="status"></span>
+</header>
+
+<section id="about">
+  <div class="wrap about-grid">
+    <div>
+      <p class="kicker">What is VOID</p>
+      <h2>The point where gravity wins, decisively.</h2>
+      <p class="lead">A black hole doesn't push, it pulls. VOID runs on the same logic: not a token shouting for attention, but one that quietly draws everyone curious into its orbit.</p>
+      <p class="lead">No promises of a roadmap to the moon. Just one direction: inward. VOID holders know that once something crosses the event horizon, there's no going back — only trust in the pull.</p>
+    </div>
+    <svg class="mini-hole" viewBox="0 0 300 300" role="img" aria-label="Small illustration of a black hole">
+      <defs>
+        <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff8c42" stop-opacity="0.7"/>
+          <stop offset="60%" stop-color="#ff6a2c" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="150" cy="150" r="140" fill="url(#glow2)"/>
+      <ellipse cx="150" cy="150" rx="135" ry="40" fill="none" stroke="#ff6a2c" stroke-width="4" opacity="0.7"/>
+      <ellipse cx="150" cy="150" rx="105" ry="30" fill="none" stroke="#ffb066" stroke-width="3" opacity="0.55"/>
+      <circle cx="150" cy="150" r="58" fill="#000000"/>
+    </svg>
+  </div>
+</section>
+
+<section id="stats">
+  <div class="wrap">
+    <p class="kicker">Stats</p>
+    <h2>Numbers pulled into orbit.</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="num">1B</div><div class="lbl">Total Supply</div></div>
+      <div class="stat"><div class="num">3%</div><div class="lbl">Buy/Sell Tax</div></div>
+      <div class="stat"><div class="num">100%</div><div class="lbl">LP Locked</div></div>
+      <div class="stat"><div class="num">∞</div><div class="lbl">Gravitational Pull</div></div>
+    </div>
+    <p class="verify" data-group>
+      <a data-link="explorer" hidden>Verify the contract on the explorer</a>
+      <a data-link="lock" hidden>Check the LP lock</a>
+    </p>
+  </div>
+</section>
+
+<section id="buy">
+  <div class="wrap">
+    <p class="kicker">How to Buy</p>
+    <h2>Three steps to the event horizon.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <div><h3>Set up a wallet</h3><p>Install a crypto wallet like MetaMask or Phantom, then fund it with a bit of the network's native coin for gas.</p></div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div><h3>Swap into VOID</h3><p>Open your DEX of choice, paste the VOID contract address, and swap the network coin for VOID.</p></div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div><h3>Feel the pull</h3><p>Hold in your wallet and join the community. Once you're in orbit, it's hard to leave.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="community">
+  <div class="wrap">
+    <div class="brand">VOID<span>.</span></div>
+    <p class="lead" style="margin:0 auto 4px; text-align:center;">Join the others who've already been pulled in.</p>
+    <div class="links" data-group>
+      <a data-link="x" hidden>Follow VOID on X</a>
+    </div>
+    <p class="disclaimer">VOID is a meme coin — made for community fun, not an investment product or financial advice. Crypto assets are highly volatile and risky. Always do your own research (DYOR) before buying any asset.</p>
+  </div>
+</footer>
+
+<script>
+  // Fill in links here. Leave '' to hide that button/link.
+  var LINKS = {
+    x: '',        // https://x.com/yourcommunity
+    dex: '',      // DEX swap link
+    chart: '',    // Dexscreener / chart link
+    explorer: '', // contract on block explorer
+    lock: ''      // LP lock proof
+  };
+  document.querySelectorAll('[data-link]').forEach(function(el){
+    var u = LINKS[el.getAttribute('data-link')];
+    if(u){ el.href = u; el.target = '_blank'; el.rel = 'noopener noreferrer'; el.hidden = false; }
+  });
+  document.querySelectorAll('[data-group]').forEach(function(g){
+    g.hidden = !g.querySelector('[data-link]:not([hidden])');
+  });
+  (function(){
+    var btn = document.getElementById('caCopy');
+    var txt = document.getElementById('caText');
+    var live = document.getElementById('caLive');
+    if(!btn || !txt) return;
+    var original = txt.textContent;
+    btn.addEventListener('click', function(){
+      var value = original;
+      function fallbackCopy(str){
+        var ta = document.createElement('textarea');
+        ta.value = str;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try{ document.execCommand('copy'); }catch(e){}
+        document.body.removeChild(ta);
+      }
+      var done = function(){
+        txt.textContent = 'Copied!'; if(live) live.textContent = 'Contract address copied';
+        setTimeout(function(){ txt.textContent = original; }, 1500);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(value).then(done).catch(function(){ fallbackCopy(value); done(); });
+      } else {
+        fallbackCopy(value);
+        done();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

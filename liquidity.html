@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Add Liquidity — VOID on Base</title>
+<meta name="description" content="Add VOID/ETH liquidity on Base with your own wallet.">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--black:#000;--panel:#0b0a0d;--panel-2:#131117;--ember:#ff6a2c;--ash:#3a3440;--text:#efe9e2;--text-dim:#a89e97;--faint:#8a8189;--line:#242028;--bad:#ff7a6b;--ok:#7be0a1;
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--black);color:var(--text);}
+  body{font-family:'Work Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--ember);outline-offset:3px;}
+  [hidden]{display:none !important;}
+  nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none;}
+  .brand span{color:var(--ember);}
+  .back{color:var(--text-dim);text-decoration:none;font-size:14px;}
+  .back:hover{color:var(--text);}
+  .btn{font-family:inherit;font-weight:600;font-size:15px;padding:12px 22px;border-radius:2px;border:1px solid transparent;cursor:pointer;background:var(--ember);color:#140800;transition:transform .15s ease;}
+  .btn:hover:not(:disabled){transform:translateY(-2px);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.ghost{background:none;border-color:var(--ash);color:var(--text);}
+  .btn.sm{padding:9px 16px;font-size:14px;}
+  main{max-width:480px;margin:0 auto;padding:48px 20px 72px;}
+  h1{font-family:'Unbounded',sans-serif;font-weight:700;font-size:clamp(26px,6vw,34px);line-height:1.1;margin:0 0 10px;}
+  .lead{color:var(--text-dim);line-height:1.6;margin:0 0 28px;}
+  .card{background:var(--panel);border:1px solid var(--line);padding:20px;}
+  .field{background:var(--panel-2);border:1px solid var(--line);padding:14px 16px;margin-bottom:10px;}
+  .field:focus-within{border-color:var(--ember);}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;color:var(--text-dim);}
+  .field input{width:100%;background:none;border:0;color:var(--text);font-family:'Unbounded',sans-serif;font-size:22px;padding:10px 0 4px;}
+  .field input:focus{outline:none;}
+  .max{background:none;border:0;color:var(--ember);font:inherit;font-weight:600;cursor:pointer;padding:0;}
+  .info{margin:16px 0;font-size:14px;color:var(--text-dim);display:grid;gap:8px;}
+  .info div{display:flex;justify-content:space-between;gap:12px;}
+  .info b{color:var(--text);font-weight:500;text-align:right;}
+  .slip{display:flex;gap:8px;margin:0 0 4px;}
+  .slip button{flex:1;background:none;border:1px solid var(--ash);color:var(--text-dim);font:inherit;font-size:13px;padding:8px;cursor:pointer;border-radius:2px;}
+  .slip button[aria-pressed=true]{border-color:var(--ember);color:var(--text);}
+  #go{width:100%;padding:15px;}
+  #status{margin-top:14px;font-size:14px;line-height:1.5;min-height:21px;word-break:break-word;}
+  #status.bad{color:var(--bad);} #status.ok{color:var(--ok);}
+  #status a{color:var(--text);text-decoration-color:var(--ember);text-underline-offset:4px;}
+  .note{font-size:12px;color:var(--faint);line-height:1.6;margin-top:24px;}
+  .net{font-size:13px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">VOID<span>.</span></a>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <a class="back" href="index.html">Home</a>
+    <button class="btn sm" id="conn" type="button">Connect wallet</button>
+  </div>
+</nav>
+
+<main>
+  <h1>Add liquidity</h1>
+  <p class="lead">Pair VOID with ETH in the Uniswap V2 pool on Base. You receive LP tokens that represent your share of the pool.</p>
+
+  <div class="card" id="bal" hidden style="margin-bottom:14px;">
+    <div class="row"><span>Your <span id="symA">VOID</span> on Base</span><a id="tokLink" class="net" target="_blank" rel="noopener noreferrer"></a></div>
+    <div id="balBig" style="font-family:'Unbounded',sans-serif;font-size:clamp(22px,7vw,30px);margin-top:10px;word-break:break-all;color:var(--ember);">0</div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <div class="row"><label for="amtT">VOID</label><span>Balance: <span id="balT">–</span> <button class="max" id="maxT" type="button">Max</button></span></div>
+      <input id="amtT" inputmode="decimal" placeholder="0.0" autocomplete="off">
+    </div>
+    <div class="field">
+      <div class="row"><label for="amtE">ETH</label><span>Balance: <span id="balE">–</span></span></div>
+      <input id="amtE" inputmode="decimal" placeholder="0.0" autocomplete="off">
+    </div>
+
+    <div class="row" style="margin:14px 0 8px;">Slippage tolerance</div>
+    <div class="slip" id="slip">
+      <button type="button" data-v="50" aria-pressed="false">0.5%</button>
+      <button type="button" data-v="100" aria-pressed="true">1%</button>
+      <button type="button" data-v="300" aria-pressed="false">3%</button>
+    </div>
+
+    <div class="info">
+      <div><span>Pool</span><b id="pool">–</b></div>
+      <div><span>Price</span><b id="price">–</b></div>
+    </div>
+
+    <button class="btn" id="go" type="button" disabled>Connect wallet</button>
+    <div id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <p class="note">Liquidity providers can lose value compared with just holding (impermanent loss). If no pool exists yet, the first amounts you add set the starting price. VOID is a meme coin for community fun, not financial advice. Check every transaction in your wallet before you confirm.</p>
+</main>
+
+<script>
+(function(){
+  var CFG = {
+    TOKEN:  '0x00', // ← UPDATE the VOID contract address on Base here (the only place to change)
+    ROUTER: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24', // Uniswap V2 Router02, Base
+    FACTORY:'0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6', // Uniswap V2 Factory, Base
+    WETH:   '0x4200000000000000000000000000000000000006',
+    CHAIN:  '0x2105',
+    EXPLORER:'https://basescan.org'
+  };
+  var $ = function(id){return document.getElementById(id);};
+  var st = {acct:null, dec:18, balT:0n, balE:0n, allow:0n, rT:0n, rE:0n, pool:false, slip:100, busy:false, bad:false, sym:'VOID'};
+  var eth = window.ethereum;
+
+  var pad = function(h){return String(h).replace(/^0x/,'').toLowerCase().padStart(64,'0');};
+  var hex = function(b){return '0x'+b.toString(16);};
+  function parse(v,d){
+    v=(v||'').trim(); if(!/^\d*\.?\d*$/.test(v)||v===''||v==='.') return 0n;
+    var p=v.split('.'), f=(p[1]||'').slice(0,d).padEnd(d,'0');
+    return BigInt((p[0]||'0')+f);
+  }
+  function fmt(b,d,dp){
+    var s=b.toString().padStart(d+1,'0'), i=s.slice(0,-d)||'0', f=s.slice(-d).slice(0,dp).replace(/0+$/,'');
+    return f?i+'.'+f:i;
+  }
+  function msg(t,c,html){var e=$('status'); e.className=c||''; if(html) e.innerHTML=t; else e.textContent=t;}
+  function ethCall(to,data){return eth.request({method:'eth_call',params:[{to:to,data:data},'latest']});}
+  var short = function(a){return a.slice(0,6)+'…'+a.slice(-4);};
+
+  async function ensureBase(){
+    var id = await eth.request({method:'eth_chainId'});
+    if(id===CFG.CHAIN) return true;
+    try{
+      await eth.request({method:'wallet_switchEthereumChain',params:[{chainId:CFG.CHAIN}]});
+    }catch(e){
+      if(e && e.code===4902){
+        await eth.request({method:'wallet_addEthereumChain',params:[{chainId:CFG.CHAIN,chainName:'Base',nativeCurrency:{name:'Ether',symbol:'ETH',decimals:18},rpcUrls:['https://mainnet.base.org'],blockExplorerUrls:[CFG.EXPLORER]}]});
+      } else throw e;
+    }
+    return true;
+  }
+
+  async function connect(){
+    if(!eth){ msg('No wallet found. Install MetaMask, Coinbase Wallet or Rabby, then reload this page.','bad'); return; }
+    try{
+      var a = await eth.request({method:'eth_requestAccounts'});
+      st.acct = a[0]; await ensureBase(); await refresh(); msg('');
+    }catch(e){ msg(e && e.code===4001 ? 'Connection cancelled.' : 'Could not connect: '+(e.message||e),'bad'); }
+  }
+
+  async function refresh(){
+    if(!st.acct){ render(); return; }
+    var id = await eth.request({method:'eth_chainId'});
+    if(id!==CFG.CHAIN){ st.wrong=true; render(); return; }
+    st.wrong=false;
+    if(!/^0x[0-9a-fA-F]{40}$/.test(CFG.TOKEN)){ st.bad=true; msg('The VOID contract address is not set yet.','bad'); render(); return; }
+    try{
+      var code = await eth.request({method:'eth_getCode',params:[CFG.TOKEN,'latest']});
+      if(code==='0x'){ st.bad=true; msg('No token contract found at this address on Base. Check the VOID address.','bad'); render(); return; }
+    }catch(e){}
+    if(st.bad){ st.bad=false; msg(''); }
+    try{
+      st.dec = parseInt(await ethCall(CFG.TOKEN,'0x313ce567'),16)||18;
+      try{ var sh=(await ethCall(CFG.TOKEN,'0x95d89b41')).slice(2); var ln=parseInt(sh.slice(64,128),16);
+        st.sym = decodeURIComponent(sh.slice(128,128+ln*2).replace(/../g,'%$&')) || 'VOID'; }catch(e){ st.sym='VOID'; }
+      var r = await Promise.all([
+        eth.request({method:'eth_getBalance',params:[st.acct,'latest']}),
+        ethCall(CFG.TOKEN,'0x70a08231'+pad(st.acct)),
+        ethCall(CFG.TOKEN,'0xdd62ed3e'+pad(st.acct)+pad(CFG.ROUTER)),
+        ethCall(CFG.FACTORY,'0xe6a43905'+pad(CFG.TOKEN)+pad(CFG.WETH))
+      ]);
+      st.balE=BigInt(r[0]); st.balT=BigInt(r[1]); st.allow=BigInt(r[2]);
+      var pair='0x'+r[3].slice(-40);
+      st.pool = !/^0x0+$/.test(pair);
+      st.rT=0n; st.rE=0n;
+      if(st.pool){
+        var g = (await ethCall(pair,'0x0902f1ac')).slice(2);
+        var r0=BigInt('0x'+g.slice(0,64)), r1=BigInt('0x'+g.slice(64,128));
+        var tokenIs0 = BigInt(CFG.TOKEN) < BigInt(CFG.WETH);
+        st.rT = tokenIs0?r0:r1; st.rE = tokenIs0?r1:r0;
+        if(st.rT===0n||st.rE===0n) st.pool=false;
+      }
+    }catch(e){ msg('Could not read data from Base. Try again in a moment.','bad'); }
+    render();
+  }
+
+  function render(){
+    var go=$('go'), c=$('conn');
+    c.textContent = st.acct ? short(st.acct) : 'Connect wallet';
+    var showBal = !!st.acct && !st.wrong && !st.bad;
+    $('bal').hidden = !showBal;
+    if(showBal){
+      $('symA').textContent = st.sym;
+      $('balBig').textContent = fmt(st.balT,st.dec,6)+' '+st.sym;
+      var tl=$('tokLink'); tl.textContent=short(CFG.TOKEN); tl.href=CFG.EXPLORER+'/token/'+CFG.TOKEN;
+    }
+    $('balT').textContent = st.acct ? fmt(st.balT,st.dec,4) : '–';
+    $('balE').textContent = st.acct ? fmt(st.balE,18,5) : '–';
+    $('pool').textContent = st.pool ? 'VOID/ETH exists' : (st.acct && !st.wrong ? 'New pool' : '–');
+    $('price').textContent = st.pool ? '1 ETH = '+fmt(st.rT*10n**18n/st.rE,st.dec,2)+' VOID' : (st.acct && !st.wrong ? 'You set it' : '–');
+    var t=parse($('amtT').value,st.dec), e=parse($('amtE').value,18);
+    if(!st.acct){ go.textContent='Connect wallet'; go.disabled=false; return; }
+    if(st.wrong){ go.textContent='Switch to Base'; go.disabled=false; return; }
+    if(st.bad){ go.textContent='Contract not found'; go.disabled=true; return; }
+    if(t===0n||e===0n){ go.textContent='Enter amounts'; go.disabled=true; return; }
+    if(t>st.balT){ go.textContent='Not enough VOID'; go.disabled=true; return; }
+    if(e>st.balE){ go.textContent='Not enough ETH'; go.disabled=true; return; }
+    go.textContent = st.allow<t ? 'Approve VOID' : 'Add liquidity';
+    go.disabled = st.busy;
+  }
+
+  function link(from){
+    if(!st.pool) return;
+    if(from==='t'){ var t=parse($('amtT').value,st.dec); $('amtE').value = t? fmt(t*st.rE/st.rT,18,18):''; }
+    else { var e=parse($('amtE').value,18); $('amtT').value = e? fmt(e*st.rT/st.rE,st.dec,st.dec):''; }
+  }
+
+  async function send(tx){
+    var h = await eth.request({method:'eth_sendTransaction',params:[tx]});
+    msg('Transaction sent. <a href="'+CFG.EXPLORER+'/tx/'+h+'" target="_blank" rel="noopener noreferrer">View on Basescan</a>. Waiting for confirmation…','',true);
+    for(var i=0;i<90;i++){
+      var rc = await eth.request({method:'eth_getTransactionReceipt',params:[h]});
+      if(rc) return {hash:h, ok:rc.status==='0x1'};
+      await new Promise(function(r){setTimeout(r,2000);});
+    }
+    return {hash:h, ok:null};
+  }
+
+  async function act(){
+    if(!st.acct) return connect();
+    if(st.wrong){ try{ await ensureBase(); await refresh(); }catch(e){ msg('Please switch to Base in your wallet.','bad'); } return; }
+    var t=parse($('amtT').value,st.dec), e=parse($('amtE').value,18);
+    st.busy=true; render();
+    try{
+      if(st.allow<t){
+        var r = await send({from:st.acct,to:CFG.TOKEN,data:'0x095ea7b3'+pad(CFG.ROUTER)+pad(hex(t))});
+        if(r.ok){ msg('VOID approved for this amount. Now add the liquidity.','ok'); } else { msg(r.ok===null?'Still pending. Check Basescan, then refresh.':'Approval failed.','bad'); }
+      } else {
+        var k=BigInt(10000-st.slip), dl=BigInt(Math.floor(Date.now()/1000)+1200);
+        var data='0xf305d719'+pad(CFG.TOKEN)+pad(hex(t))+pad(hex(t*k/10000n))+pad(hex(e*k/10000n))+pad(st.acct)+pad(hex(dl));
+        var r2 = await send({from:st.acct,to:CFG.ROUTER,data:data,value:hex(e)});
+        if(r2.ok){ msg('Liquidity added. <a href="'+CFG.EXPLORER+'/tx/'+r2.hash+'" target="_blank" rel="noopener noreferrer">View transaction</a>','ok',true); $('amtT').value=''; $('amtE').value=''; }
+        else msg(r2.ok===null?'Still pending. Check Basescan, then refresh.':'Transaction failed. Try a higher slippage or refresh the amounts.','bad');
+      }
+    }catch(err){ msg(err && err.code===4001 ? 'You rejected the request in your wallet.' : 'Error: '+((err&&err.message)||err),'bad'); }
+    st.busy=false; await refresh();
+  }
+
+  $('conn').addEventListener('click', connect);
+  $('go').addEventListener('click', act);
+  $('amtT').addEventListener('input', function(){link('t');render();});
+  $('amtE').addEventListener('input', function(){link('e');render();});
+  $('maxT').addEventListener('click', function(){ if(!st.acct)return; $('amtT').value=fmt(st.balT,st.dec,st.dec); link('t'); render(); });
+  $('slip').addEventListener('click', function(ev){
+    var b=ev.target.closest('button'); if(!b) return;
+    st.slip=parseInt(b.dataset.v,10);
+    [].forEach.call($('slip').children,function(x){x.setAttribute('aria-pressed',x===b);});
+  });
+  if(eth){
+    eth.on&&eth.on('accountsChanged',function(a){st.acct=a[0]||null; refresh();});
+    eth.on&&eth.on('chainChanged',function(){refresh();});
+    eth.request({method:'eth_accounts'}).then(function(a){ if(a[0]){st.acct=a[0]; refresh();} }).catch(function(){});
+  }
+  render();
+})();
+</script>
+</body>
+</html>
